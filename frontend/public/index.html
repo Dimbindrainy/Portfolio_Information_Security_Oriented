@@ -2,33 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My Portfolio</title>
+  <title>Zo Portfolio</title>
 
   <!-- Tailwind CSS CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- React CDN -->
+  <!-- Dark Blue Theme -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            darkbg: '#0e111b',
+            darknav: '#0f172a',
+            accent: {
+              50:  '#e0f2fe',
+              100: '#bae6fd',
+              200: '#7dd3fc',
+              300: '#38bdf8',
+              400: '#0ea5e9',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#0a3b5c',
+            },
+            lighttext: '#e2e8f0',
+            cardbg: '#1a1f2b',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & Babel -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
-  <link rel="stylesheet" href="assets/styles.css">
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-darkbg font-sans text-lighttext">
 
 <div id="root"></div>
 
 <script type="text/babel">
 const { useState, useEffect } = React;
 
-// API helper functions
-const fetchProjects = async (token=null) => {
+// ================= API =================
+const fetchProjects = async (token = null) => {
   try {
     const res = await fetch("http://127.0.0.1:5000/projects/", {
       headers: token ? { "Authorization": `Bearer ${token}` } : {}
     });
     return await res.json();
-  } catch {
+  } catch (error) {
+    console.error(error);
     return [];
   }
 };
@@ -43,25 +71,32 @@ const loginAdmin = async (username, password) => {
     const data = await res.json();
     if (res.status === 200 && data.token) return data.token;
     return null;
-  } catch {
+  } catch (error) {
+    console.error(error);
     return null;
   }
 };
 
-// Project card component
+// ================= COMPONENTS =================
+const SkillBadge = ({ text }) => (
+  <span className="bg-accent-800 text-accent-100 px-4 py-2 rounded-full text-sm font-medium shadow-sm">
+    {text}
+  </span>
+);
+
 const ProjectCard = ({ name, description }) => (
-  <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition">
-    <h2 className="text-xl font-bold">{name}</h2>
-    <p className="mt-2 text-gray-700">{description}</p>
+  <div className="bg-cardbg border border-accent-900 p-6 rounded-lg shadow-md hover:shadow-xl hover:border-accent-700 transition">
+    <h3 className="text-xl font-bold text-accent-200">{name}</h3>
+    <p className="mt-2 text-lighttext">{description}</p>
   </div>
 );
 
-// Main App component
+// ================= MAIN APP =================
 const App = () => {
   const [projects, setProjects] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [token, setToken] = useState(null);
-  const [loginForm, setLoginForm] = useState({username:"", password:""});
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
@@ -73,61 +108,141 @@ const App = () => {
     const t = await loginAdmin(loginForm.username, loginForm.password);
     if (t) {
       setToken(t);
-      setIsAdmin(true);
+      setShowLogin(false);
       setLoginError("");
     } else {
       setLoginError("Invalid credentials");
     }
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <form className="bg-white p-8 rounded-lg shadow-lg w-96" onSubmit={handleLogin}>
-          <h1 className="text-2xl font-bold mb-6 text-center">Admin Login</h1>
-          {loginError && <p className="text-red-500 mb-4">{loginError}</p>}
-          <input
-            type="text"
-            placeholder="Username"
-            className="w-full p-2 mb-4 border rounded"
-            value={loginForm.username}
-            onChange={e => setLoginForm({...loginForm, username: e.target.value})}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-2 mb-4 border rounded"
-            value={loginForm.password}
-            onChange={e => setLoginForm({...loginForm, password: e.target.value})}
-            required
-          />
-          <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">Login</button>
-          <p className="mt-4 text-gray-600 text-center">Or continue as guest</p>
-          <button onClick={() => setIsAdmin(false)} className="w-full mt-2 border p-2 rounded hover:bg-gray-100 transition">Guest</button>
-        </form>
-      </div>
-    );
-  }
+  const scrollToSection = (id) => {
+    document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
-      <h1 className="text-4xl font-extrabold mb-8 text-center text-gray-900">My Portfolio Projects</h1>
+    <div>
 
-      {projects.length === 0 ? (
-        <p className="text-center text-gray-600">No projects loaded</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((p, idx) => <ProjectCard key={idx} {...p} />)}
+      {/* NAVBAR */}
+      <nav className="fixed w-full bg-darknav text-lighttext shadow-md z-50">
+        <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
+          <div className="font-bold text-lg">Zo Portfolio</div>
+          <div className="space-x-6 hidden md:block">
+            <button onClick={() => scrollToSection("home")} className="hover:text-accent-400">Home</button>
+            <button onClick={() => scrollToSection("about")} className="hover:text-accent-400">About</button>
+            <button onClick={() => scrollToSection("skills")} className="hover:text-accent-400">Skills</button>
+            <button onClick={() => scrollToSection("expertise")} className="hover:text-accent-400">Expertise</button>
+            <button onClick={() => scrollToSection("projects")} className="hover:text-accent-400">Projects</button>
+          </div>
+        </div>
+      </nav>
+
+      {/* SECRET ADMIN BUTTON */}
+      <button onClick={() => setShowLogin(true)} className="fixed bottom-4 right-4 text-xs text-gray-400 hover:text-lighttext">•</button>
+
+      {/* LOGIN MODAL */}
+      {showLogin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <form onSubmit={handleLogin} className="bg-darknav p-8 rounded-lg shadow-lg w-96 text-lighttext">
+            <h2 className="text-xl font-bold mb-4 text-center">Admin Login</h2>
+            {loginError && <p className="text-red-500 mb-4">{loginError}</p>}
+            <input
+              type="text"
+              placeholder="Username"
+              className="w-full p-2 mb-4 border rounded bg-darkbg text-lighttext border-accent-700"
+              value={loginForm.username}
+              onChange={e => setLoginForm({ ...loginForm, username: e.target.value })}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full p-2 mb-4 border rounded bg-darkbg text-lighttext border-accent-700"
+              value={loginForm.password}
+              onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
+              required
+            />
+            <div className="flex justify-between">
+              <button type="button" onClick={() => setShowLogin(false)} className="px-4 py-2 border rounded border-accent-700 hover:bg-accent-900">Cancel</button>
+              <button type="submit" className="px-4 py-2 bg-accent-500 text-white rounded hover:bg-accent-400">Login</button>
+            </div>
+          </form>
         </div>
       )}
+
+      {/* CONTENT */}
+      <div className="pt-24">
+
+        {/* HOME / HERO */}
+        <section id="home" className="bg-darkbg max-w-6xl mx-auto px-8 py-16 flex flex-col md:flex-row items-center gap-10">
+          <img src="assets/Profil.png" alt="Profile" className="w-48 h-48 rounded-full object-cover shadow-lg" />
+          <div>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-accent-200 mb-4">
+              Nomenjanahary Zo DIMBINDRAINY
+            </h1>
+            <p className="text-lg text-lighttext">
+              Digital Infrastructure & Support Specialist passionate about secure systems, cloud solutions, and embedded systems.
+            </p>
+          </div>
+        </section>
+
+        {/* ABOUT */}
+        <section id="about" className="bg-darkbg py-16">
+          <div className="max-w-4xl mx-auto px-8 text-center">
+            <h2 className="text-3xl font-bold text-accent-200 mb-6">About Me</h2>
+            <p className="text-lighttext leading-relaxed">
+              I specialize in cybersecurity architecture, cloud engineering, web application development, and embedded systems design. My goal is to build secure, scalable, and innovative solutions bridging infrastructure and applications.
+            </p>
+          </div>
+        </section>
+
+        {/* SKILLS */}
+        <section id="skills" className="bg-darkbg py-16">
+          <div className="max-w-6xl mx-auto px-8 text-center">
+            <h2 className="text-3xl font-bold text-accent-200 mb-8">Skills</h2>
+            <div className="flex flex-wrap justify-center gap-4">
+              <SkillBadge text="Cybersecurity" />
+              <SkillBadge text="Cloud Computing" />
+              <SkillBadge text="Flask / Django" />
+              <SkillBadge text="AWS / Azure" />
+              <SkillBadge text="Embedded Systems (ESP32)" />
+              <SkillBadge text="Python / React" />
+            </div>
+          </div>
+        </section>
+
+        {/* EXPERTISE */}
+        <section id="expertise" className="bg-darkbg py-16">
+          <div className="max-w-4xl mx-auto px-8 text-center">
+            <h2 className="text-3xl font-bold text-accent-200 mb-6">Expertise</h2>
+            <p className="text-lighttext">
+              Network segmentation, Zero Trust Architecture, cloud deployment, infrastructure monitoring, secure API development, and IoT system integration.
+            </p>
+          </div>
+        </section>
+
+        {/* PROJECTS */}
+        <section id="projects" className="bg-darkbg py-16">
+          <div className="max-w-6xl mx-auto px-8">
+            <h2 className="text-3xl font-bold mb-8 text-center text-accent-200">Projects</h2>
+            {projects.length === 0 ? (
+              <p className="text-center text-lighttext">No projects loaded</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((p, idx) => <ProjectCard key={idx} {...p} />)}
+              </div>
+            )}
+          </div>
+        </section>
+
+      </div>
     </div>
   );
 };
 
-// Render App
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
+
 </script>
+
 </body>
 </html>
