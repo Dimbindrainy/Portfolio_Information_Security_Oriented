@@ -1,0 +1,5 @@
+[
+    {"name": "Cybersecurity Lab", "description": "Pen-testing and network security projects."},
+    {"name": "Cloud Automation", "description": "AWS/Azure deployment automation scripts."},
+    {"name": "Robotics Demo", "description": "Arduino & Raspberry Pi robotics projects."}
+]
