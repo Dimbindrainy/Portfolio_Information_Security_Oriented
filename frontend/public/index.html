@@ -4,44 +4,48 @@
   <meta charset="UTF-8">
   <title>Zo Portfolio</title>
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Dark Blue Theme -->
+  <!-- Custom Sci-Fi Theme -->
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            darkbg: '#0e111b',
-            darknav: '#0f172a',
-            accent: {
-              50:  '#e0f2fe',
-              100: '#bae6fd',
-              200: '#7dd3fc',
-              300: '#38bdf8',
-              400: '#0ea5e9',
-              500: '#0284c7',
-              600: '#0369a1',
-              700: '#075985',
-              800: '#0c4a6e',
-              900: '#0a3b5c',
-            },
-            lighttext: '#e2e8f0',
-            cardbg: '#1a1f2b',
+            space: '#050816',
+            neonBlue: '#00f0ff',
+            neonSoft: '#0ea5e9',
+            cardDark: '#0b1120'
+          },
+          boxShadow: {
+            neon: "0 0 10px #00f0ff, 0 0 20px #00f0ff",
+            neonSoft: "0 0 5px #0ea5e9"
+          },
+          animation: {
+            'spin-slow': 'spin 8s linear infinite',
+            'scan': 'scan 3s linear infinite'
+          },
+          keyframes: {
+            scan: {
+              '0%': { top: '-20%' },
+              '100%': { top: '120%' }
+            }
           }
+
         }
       }
     }
   </script>
 
-  <!-- React & Babel -->
+  <!-- React -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
 </head>
-<body class="bg-darkbg font-sans text-lighttext">
+
+<body class="bg-space text-gray-200 font-sans">
 
 <div id="root"></div>
 
@@ -79,15 +83,57 @@ const loginAdmin = async (username, password) => {
 
 // ================= COMPONENTS =================
 const SkillBadge = ({ text }) => (
-  <span className="bg-accent-800 text-accent-100 px-4 py-2 rounded-full text-sm font-medium shadow-sm">
+  <span className="px-4 py-2 rounded-full border border-neonBlue text-neonBlue shadow-neonSoft text-sm">
     {text}
   </span>
 );
 
 const ProjectCard = ({ name, description }) => (
-  <div className="bg-cardbg border border-accent-900 p-6 rounded-lg shadow-md hover:shadow-xl hover:border-accent-700 transition">
-    <h3 className="text-xl font-bold text-accent-200">{name}</h3>
-    <p className="mt-2 text-lighttext">{description}</p>
+  <div className="bg-cardDark border border-neonBlue/30 p-6 rounded-lg shadow-lg hover:shadow-neon transition">
+    <h3 className="text-xl font-bold text-neonBlue">{name}</h3>
+    <p className="mt-2 text-gray-300">{description}</p>
+  </div>
+);
+const TypingEffect = () => {
+  const roles = [
+    "Cybersecurity Architect",
+    "Cloud Infrastructure Engineer",
+    "Secure Web Developer",
+    "Embedded Systems Builder"
+  ];
+
+  const [text, setText] = React.useState("");
+  const [roleIndex, setRoleIndex] = React.useState(0);
+  const [charIndex, setCharIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const currentRole = roles[roleIndex];
+    if (charIndex < currentRole.length) {
+      const timeout = setTimeout(() => {
+        setText(currentRole.substring(0, charIndex + 1));
+        setCharIndex(charIndex + 1);
+      }, 60);
+      return () => clearTimeout(timeout);
+    } else {
+      setTimeout(() => {
+        setCharIndex(0);
+        setRoleIndex((roleIndex + 1) % roles.length);
+      }, 1500);
+    }
+  }, [charIndex, roleIndex]);
+
+  return <span>{text}_</span>;
+};
+const Stat = ({ number, label }) => (
+  <div>
+    <p className="text-3xl font-bold text-neonBlue">{number}</p>
+    <p className="text-gray-400 text-sm">{label}</p>
+  </div>
+);
+const Status = ({ label, value, color }) => (
+  <div className="flex justify-between border-b border-neonBlue/10 py-2">
+    <span className="text-gray-400">{label}</span>
+    <span className={color}>{value}</span>
   </div>
 );
 
@@ -123,115 +169,170 @@ const App = () => {
     <div>
 
       {/* NAVBAR */}
-      <nav className="fixed w-full bg-darknav text-lighttext shadow-md z-50">
+      <nav className="fixed w-full bg-black/40 backdrop-blur-md border-b border-neonBlue/20 z-50">
         <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
-          <div className="font-bold text-lg">Zo Portfolio</div>
+          <div className="font-bold text-neonBlue tracking-widest">ZO.EXE</div>
           <div className="space-x-6 hidden md:block">
-            <button onClick={() => scrollToSection("home")} className="hover:text-accent-400">Home</button>
-            <button onClick={() => scrollToSection("about")} className="hover:text-accent-400">About</button>
-            <button onClick={() => scrollToSection("skills")} className="hover:text-accent-400">Skills</button>
-            <button onClick={() => scrollToSection("expertise")} className="hover:text-accent-400">Expertise</button>
-            <button onClick={() => scrollToSection("projects")} className="hover:text-accent-400">Projects</button>
+            {["home","about","skills","expertise","projects"].map(item => (
+              <button key={item}
+                onClick={() => scrollToSection(item)}
+                className="hover:text-neonBlue transition">
+                {item.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
       </nav>
 
       {/* SECRET ADMIN BUTTON */}
-      <button onClick={() => setShowLogin(true)} className="fixed bottom-4 right-4 text-xs text-gray-400 hover:text-lighttext">•</button>
+      <button onClick={() => setShowLogin(true)}
+        className="fixed bottom-4 right-4 text-xs text-gray-600 hover:text-neonBlue">
+        ●
+      </button>
 
       {/* LOGIN MODAL */}
       {showLogin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <form onSubmit={handleLogin} className="bg-darknav p-8 rounded-lg shadow-lg w-96 text-lighttext">
-            <h2 className="text-xl font-bold mb-4 text-center">Admin Login</h2>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <form onSubmit={handleLogin}
+            className="bg-cardDark border border-neonBlue/40 p-8 rounded-lg shadow-neon w-96">
+            <h2 className="text-xl font-bold text-neonBlue mb-4 text-center">
+              Admin Access
+            </h2>
             {loginError && <p className="text-red-500 mb-4">{loginError}</p>}
             <input
               type="text"
               placeholder="Username"
-              className="w-full p-2 mb-4 border rounded bg-darkbg text-lighttext border-accent-700"
+              className="w-full p-2 mb-4 bg-black border border-neonBlue/40 rounded"
               value={loginForm.username}
-              onChange={e => setLoginForm({ ...loginForm, username: e.target.value })}
+              onChange={e => setLoginForm({...loginForm, username:e.target.value})}
               required
             />
             <input
               type="password"
               placeholder="Password"
-              className="w-full p-2 mb-4 border rounded bg-darkbg text-lighttext border-accent-700"
+              className="w-full p-2 mb-4 bg-black border border-neonBlue/40 rounded"
               value={loginForm.password}
-              onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
+              onChange={e => setLoginForm({...loginForm, password:e.target.value})}
               required
             />
-            <div className="flex justify-between">
-              <button type="button" onClick={() => setShowLogin(false)} className="px-4 py-2 border rounded border-accent-700 hover:bg-accent-900">Cancel</button>
-              <button type="submit" className="px-4 py-2 bg-accent-500 text-white rounded hover:bg-accent-400">Login</button>
-            </div>
+            <button className="w-full py-2 bg-neonBlue text-black font-bold rounded hover:shadow-neon transition">
+              LOGIN
+            </button>
           </form>
         </div>
       )}
 
-      {/* CONTENT */}
-      <div className="pt-24">
+      <div className="pt-28">
 
-        {/* HOME / HERO */}
-        <section id="home" className="bg-darkbg max-w-6xl mx-auto px-8 py-16 flex flex-col md:flex-row items-center gap-10">
-          <img src="assets/Profil.png" alt="Profile" className="w-48 h-48 rounded-full object-cover shadow-lg" />
-          <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-accent-200 mb-4">
-              Nomenjanahary Zo DIMBINDRAINY
-            </h1>
-            <p className="text-lg text-lighttext">
-              Digital Infrastructure & Support Specialist passionate about secure systems, cloud solutions, and embedded systems.
-            </p>
+        {/* HERO */}
+        <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+
+          {/* Animated Grid Background */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] animate-pulse"></div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-8 grid md:grid-cols-2 gap-16 items-center">
+
+            {/* LEFT SIDE */}
+            <div>
+              <h1 className="text-5xl md:text-6xl font-extrabold text-neonBlue drop-shadow-lg">
+                Nomenjanahary Zo DIMBINDRAINY
+              </h1>
+
+              <div className="mt-6 text-xl font-mono text-green-400">
+                &gt; <TypingEffect />
+              </div>
+
+              <div className="mt-8 flex gap-4">
+                <button
+                  onClick={() => document.getElementById("projects").scrollIntoView({behavior:"smooth"})}
+                  className="px-6 py-3 bg-neonBlue text-black font-bold rounded hover:shadow-neon transition">
+                  View Projects
+                </button>
+
+                <button className="px-6 py-3 border border-neonBlue text-neonBlue rounded hover:shadow-neonSoft transition">
+                  Download CV
+                </button>
+              </div>
+
+              {/* Stats */}
+              <div className="mt-14 grid grid-cols-2 gap-6">
+                <Stat number="10+" label="Secure Deployments" />
+                <Stat number="5+" label="Cloud Architectures" />
+                <Stat number="15+" label="Automation Scripts" />
+                <Stat number="3+" label="Embedded Systems" />
+              </div>
+            </div>
+
+            {/* RIGHT SIDE - SOC PANEL */}
+            {/* HOLOGRAM PROFILE */}
+            <div className="flex flex-col items-center mb-8 relative">
+
+              <div className="relative w-32 h-32">
+
+                {/* Rotating outer ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-neonBlue animate-spin-slow opacity-60"></div>
+
+                {/* Glow ring */}
+                <div className="absolute inset-2 rounded-full border border-neonBlue shadow-neon"></div>
+
+                {/* Scanning line */}
+                <div className="absolute inset-0 rounded-full overflow-hidden">
+                  <div className="absolute w-full h-6 bg-gradient-to-b from-transparent via-neonBlue/40 to-transparent animate-scan"></div>
+                </div>
+
+                {/* Profile Image */}
+                <img
+                  src="assets/profile.jpg"
+                  className="w-32 h-32 rounded-full object-cover border-2 border-neonBlue shadow-neon relative z-10"
+                />
+              </div>
+
+              <p className="mt-4 text-neonBlue font-bold tracking-widest">
+                OPERATOR: ZO
+              </p>
+              <p className="text-xs text-green-400">IDENTITY VERIFIED</p>
+
+            </div>
+
           </div>
         </section>
 
+
         {/* ABOUT */}
-        <section id="about" className="bg-darkbg py-16">
-          <div className="max-w-4xl mx-auto px-8 text-center">
-            <h2 className="text-3xl font-bold text-accent-200 mb-6">About Me</h2>
-            <p className="text-lighttext leading-relaxed">
-              I specialize in cybersecurity architecture, cloud engineering, web application development, and embedded systems design. My goal is to build secure, scalable, and innovative solutions bridging infrastructure and applications.
-            </p>
-          </div>
+        <section id="about" className="py-20 text-center max-w-4xl mx-auto px-8">
+          <h2 className="text-3xl font-bold text-neonBlue mb-6">About Me</h2>
+          <p className="text-gray-300 leading-relaxed">
+            I design secure architectures, deploy cloud systems,
+            build web applications, and develop embedded IoT solutions.
+            My focus is resilience, performance, and innovation.
+          </p>
         </section>
 
         {/* SKILLS */}
-        <section id="skills" className="bg-darkbg py-16">
-          <div className="max-w-6xl mx-auto px-8 text-center">
-            <h2 className="text-3xl font-bold text-accent-200 mb-8">Skills</h2>
-            <div className="flex flex-wrap justify-center gap-4">
-              <SkillBadge text="Cybersecurity" />
-              <SkillBadge text="Cloud Computing" />
-              <SkillBadge text="Flask / Django" />
-              <SkillBadge text="AWS / Azure" />
-              <SkillBadge text="Embedded Systems (ESP32)" />
-              <SkillBadge text="Python / React" />
-            </div>
-          </div>
-        </section>
-
-        {/* EXPERTISE */}
-        <section id="expertise" className="bg-darkbg py-16">
-          <div className="max-w-4xl mx-auto px-8 text-center">
-            <h2 className="text-3xl font-bold text-accent-200 mb-6">Expertise</h2>
-            <p className="text-lighttext">
-              Network segmentation, Zero Trust Architecture, cloud deployment, infrastructure monitoring, secure API development, and IoT system integration.
-            </p>
+        <section id="skills" className="py-20 text-center">
+          <h2 className="text-3xl font-bold text-neonBlue mb-8">Skills</h2>
+          <div className="flex flex-wrap justify-center gap-4">
+            <SkillBadge text="Cybersecurity" />
+            <SkillBadge text="Cloud (AWS / Azure)" />
+            <SkillBadge text="Flask / Django" />
+            <SkillBadge text="React / Tailwind" />
+            <SkillBadge text="Embedded Systems (ESP32)" />
+            <SkillBadge text="Python Automation" />
           </div>
         </section>
 
         {/* PROJECTS */}
-        <section id="projects" className="bg-darkbg py-16">
-          <div className="max-w-6xl mx-auto px-8">
-            <h2 className="text-3xl font-bold mb-8 text-center text-accent-200">Projects</h2>
-            {projects.length === 0 ? (
-              <p className="text-center text-lighttext">No projects loaded</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map((p, idx) => <ProjectCard key={idx} {...p} />)}
-              </div>
-            )}
-          </div>
+        <section id="projects" className="py-20 max-w-6xl mx-auto px-8">
+          <h2 className="text-3xl font-bold text-center text-neonBlue mb-10">
+            Projects
+          </h2>
+          {projects.length === 0 ? (
+            <p className="text-center text-gray-400">No projects loaded</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((p, i) => <ProjectCard key={i} {...p} />)}
+            </div>
+          )}
         </section>
 
       </div>
@@ -241,7 +342,6 @@ const App = () => {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
-
 </script>
 
 </body>
