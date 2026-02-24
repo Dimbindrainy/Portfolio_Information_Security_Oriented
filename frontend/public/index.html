@@ -169,15 +169,15 @@ const Status = ({ label, value, color }) => (
     <span className={color}>{value}</span>
   </div>
 );
-
-
-
 const AdminDashboard = ({ token, onLogout }) => {
-  console.log("Rendering AdminDashboard", token);
   const [skillsData, setSkillsData] = React.useState({ skills: [], tech_stack: [], tools: [] });
+  const [aboutData, setAboutData] = React.useState({ headline: "", paragraphs: [], roles: [] });
+
   const [newSkill, setNewSkill] = React.useState({ category: "", name: "" });
   const [newTech, setNewTech] = React.useState("");
   const [newTool, setNewTool] = React.useState("");
+  const [newParagraph, setNewParagraph] = React.useState("");
+  const [newRole, setNewRole] = React.useState("");
 
   React.useEffect(() => {
     fetch("http://127.0.0.1:5000/skills", {
@@ -185,30 +185,131 @@ const AdminDashboard = ({ token, onLogout }) => {
     })
       .then(res => res.json())
       .then(data => setSkillsData(data));
+
+    fetch("http://127.0.0.1:5000/about/", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => setAboutData(data));
   }, [token]);
 
-  const addSkill = () => {
-    if(newSkill.category && newSkill.name) {
-      setSkillsData({
-        ...skillsData,
-        skills: [...skillsData.skills, { ...newSkill }]
-      });
-      setNewSkill({ category: "", name: "" });
+  const saveAbout = () => {
+    fetch("http://127.0.0.1:5000/about/", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(aboutData)
+    });
+  };
+
+  const addParagraph = () => {
+    if (newParagraph.trim()) {
+      setAboutData({ ...aboutData, paragraphs: [...aboutData.paragraphs, newParagraph] });
+      setNewParagraph("");
+    }
+  };
+  const addSkill = async () => {
+    if (!newSkill.category || !newSkill.name) return;
+    const res = await fetch("http://127.0.0.1:5000/skills", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ category: "skills", value: { ...newSkill } })
+    });
+    const data = await res.json();
+    setSkillsData(data);
+    setNewSkill({ category: "", name: "" });
+  };
+
+  const addTech = async () => {
+    if (!newTech) return;
+    const res = await fetch("http://127.0.0.1:5000/skills", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ category: "tech_stack", value: newTech })
+    });
+    const data = await res.json();
+    setSkillsData(data);
+    setNewTech("");
+  };
+
+  const addTool = async () => {
+    if (!newTool) return;
+    const res = await fetch("http://127.0.0.1:5000/skills", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ category: "tools", value: newTool })
+    });
+    const data = await res.json();
+    setSkillsData(data);
+    setNewTool("");
+  };
+
+
+  const removeParagraph = index => {
+    setAboutData({
+      ...aboutData,
+      paragraphs: aboutData.paragraphs.filter((_, i) => i !== index)
+    });
+  };
+  const removeSkill = async (index) => {
+    const res = await fetch("http://127.0.0.1:5000/skills", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ category: "skills", index })
+    });
+    const data = await res.json();
+    setSkillsData(data);
+  };
+
+  const removeTech = async (index) => {
+    const res = await fetch("http://127.0.0.1:5000/skills", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ category: "tech_stack", index })
+    });
+    const data = await res.json();
+    setSkillsData(data);
+  };
+
+  const removeTool = async (index) => {
+    const res = await fetch("http://127.0.0.1:5000/skills", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ category: "tools", index })
+    });
+    const data = await res.json();
+    setSkillsData(data);
+  };
+
+  const addRole = () => {
+    if (newRole.trim()) {
+      setAboutData({ ...aboutData, roles: [...aboutData.roles, newRole] });
+      setNewRole("");
     }
   };
 
-  const addTech = () => {
-    if(newTech) {
-      setSkillsData({ ...skillsData, tech_stack: [...skillsData.tech_stack, newTech] });
-      setNewTech("");
-    }
-  };
-
-  const addTool = () => {
-    if(newTool) {
-      setSkillsData({ ...skillsData, tools: [...skillsData.tools, newTool] });
-      setNewTool("");
-    }
+  const removeRole = index => {
+    setAboutData({ ...aboutData, roles: aboutData.roles.filter((_, i) => i !== index) });
   };
 
   return (
@@ -218,14 +319,71 @@ const AdminDashboard = ({ token, onLogout }) => {
         <button onClick={onLogout} className="px-4 py-2 bg-red-600 rounded hover:shadow-neon transition">Logout</button>
       </div>
 
-      {/* Skills */}
+      {/* About Section */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold text-neonBlue mb-4">About</h2>
+        <div className="mb-4">
+          <input
+            placeholder="Headline"
+            value={aboutData.headline}
+            onChange={e => setAboutData({ ...aboutData, headline: e.target.value })}
+            className="p-2 rounded bg-black border border-neonBlue text-gray-200 w-full"
+          />
+        </div>
+
+        <div className="mb-4">
+          <h3 className="text-neonBlue font-semibold mb-2">Paragraphs</h3>
+          {aboutData.paragraphs.map((p, i) => (
+            <div key={i} className="flex items-center mb-2">
+              <p className="flex-1 text-gray-200">{p}</p>
+              <button onClick={() => removeParagraph(i)} className="ml-2 text-red-500 font-bold">X</button>
+            </div>
+          ))}
+          <div className="flex gap-2 mt-2">
+            <input
+              placeholder="New Paragraph"
+              value={newParagraph}
+              onChange={e => setNewParagraph(e.target.value)}
+              className="p-2 rounded bg-black border border-neonBlue text-gray-200 flex-1"
+            />
+            <button onClick={addParagraph} className="px-4 py-2 bg-neonBlue text-black rounded hover:shadow-neon transition">Add</button>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <h3 className="text-neonBlue font-semibold mb-2">Roles</h3>
+          {aboutData.roles.map((r, i) => (
+            <div key={i} className="flex items-center mb-2">
+              <p className="flex-1 text-gray-200">{r}</p>
+              <button onClick={() => removeRole(i)} className="ml-2 text-red-500 font-bold">X</button>
+            </div>
+          ))}
+          <div className="flex gap-2 mt-2">
+            <input
+              placeholder="New Role"
+              value={newRole}
+              onChange={e => setNewRole(e.target.value)}
+              className="p-2 rounded bg-black border border-neonBlue text-gray-200 flex-1"
+            />
+            <button onClick={addRole} className="px-4 py-2 bg-neonBlue text-black rounded hover:shadow-neon transition">Add</button>
+          </div>
+        </div>
+
+        <button onClick={saveAbout} className="px-6 py-2 bg-green-500 text-black font-bold rounded hover:shadow-neon transition mt-4">
+          Save About
+        </button>
+      </section>
+
       <section className="mb-12">
         <h2 className="text-2xl font-bold text-neonBlue mb-4">Skills</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
           {skillsData.skills.map((s, i) => (
-            <div key={i} className="p-2 rounded border border-neonBlue shadow-neon">
-              <p className="text-sm text-gray-400">{s.category}</p>
-              <p className="text-neonBlue font-bold">{s.name}</p>
+            <div key={i} className="p-2 rounded border border-neonBlue shadow-neon flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-400">{s.category}</p>
+                <p className="text-neonBlue font-bold">{s.name}</p>
+              </div>
+              <button onClick={() => removeSkill(i)} className="text-red-500 font-bold px-2 hover:text-red-400">X</button>
             </div>
           ))}
         </div>
@@ -246,12 +404,14 @@ const AdminDashboard = ({ token, onLogout }) => {
         </div>
       </section>
 
-      {/* Tech Stack */}
+      {/* ---------------- TECH STACK ---------------- */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold text-neonBlue mb-4">Tech Stack</h2>
         <div className="flex flex-wrap gap-4 mb-4">
           {skillsData.tech_stack.map((t, i) => (
-            <span key={i} className="px-4 py-2 border border-neonBlue rounded-full shadow-neon text-neonBlue">{t}</span>
+            <span key={i} className="px-4 py-2 border border-neonBlue rounded-full shadow-neon text-neonBlue flex items-center gap-2">
+              {t} <button onClick={() => removeTech(i)} className="text-red-500 font-bold hover:text-red-400">X</button>
+            </span>
           ))}
         </div>
         <div className="flex gap-2">
@@ -265,12 +425,14 @@ const AdminDashboard = ({ token, onLogout }) => {
         </div>
       </section>
 
-      {/* Tools */}
+      {/* ---------------- TOOLS ---------------- */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold text-neonBlue mb-4">Tools</h2>
         <div className="flex flex-wrap gap-4 mb-4">
           {skillsData.tools.map((t, i) => (
-            <span key={i} className="px-4 py-2 border border-neonBlue rounded-full shadow-neon text-neonBlue">{t}</span>
+            <span key={i} className="px-4 py-2 border border-neonBlue rounded-full shadow-neon text-neonBlue flex items-center gap-2">
+              {t} <button onClick={() => removeTool(i)} className="text-red-500 font-bold hover:text-red-400">X</button>
+            </span>
           ))}
         </div>
         <div className="flex gap-2">
@@ -286,7 +448,6 @@ const AdminDashboard = ({ token, onLogout }) => {
     </div>
   );
 };
-
 // ================= MAIN APP =================
 const App = () => {
   const [projects, setProjects] = useState([]);
