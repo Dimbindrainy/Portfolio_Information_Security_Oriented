@@ -1,0 +1,33 @@
+{
+  "skills": [
+    { "category": "Security", "name": "Cybersecurity Architecture" },
+    { "category": "Security", "name": "Zero Trust & Network Segmentation" },
+    { "category": "Security", "name": "Threat Detection & SOC Monitoring" },
+    { "category": "Cloud", "name": "AWS Infrastructure" },
+    { "category": "Cloud", "name": "Azure Security" },
+    { "category": "Development", "name": "Flask & Django" },
+    { "category": "Development", "name": "React & Tailwind" },
+    { "category": "Embedded", "name": "ESP32 / IoT Systems" }
+  ],
+
+  "tech_stack": [
+    "Python",
+    "JavaScript",
+    "React",
+    "Flask",
+    "Django",
+    "MySQL",
+    "AWS",
+    "Azure"
+  ],
+
+  "tools": [
+    "Microsoft Defender",
+    "Wireshark",
+    "Nmap",
+    "Git",
+    "Docker",
+    "VS Code",
+    "Linux"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Nomenjanahary Zo DIMBINDRAINY",
+  "headline": "Cybersecurity Architect & Cloud Engineer",
+  "paragraphs": [
+    "I am a security-oriented engineer specialized in building resilient digital infrastructures.",
+    "My work sits at the intersection of cybersecurity, cloud architecture, and secure application development.",
+    "Security is not a feature — it is the foundation of every system I design.",
+    "I integrate monitoring, automation, Zero Trust principles, and performance optimization into every deployment."
+  ],
+  "roles": [
+    "Cybersecurity Architect",
+    "Cloud Infrastructure Engineer",
+    "Secure Web Developer",
+    "Embedded Systems Builder",
+    "Automation & DevSecOps Specialist"
+  ],
+  "stats": [
+    { "number": "10+", "label": "Secure Deployments" },
+    { "number": "5+", "label": "Cloud Architectures" },
+    { "number": "15+", "label": "Automation Scripts" },
+    { "number": "3+", "label": "Embedded Systems" }
+  ]
+}

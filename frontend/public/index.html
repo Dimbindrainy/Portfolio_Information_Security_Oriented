@@ -23,16 +23,27 @@
             neonSoft: "0 0 5px #0ea5e9"
           },
           animation: {
-            'spin-slow': 'spin 8s linear infinite',
-            'scan': 'scan 3s linear infinite'
+          'spin-slow': 'spin 8s linear infinite',
+          'scan': 'scan 3s linear infinite',
+          'fade-left': 'fadeLeft 1s ease-out forwards',
+          'fade-right': 'fadeRight 1s ease-out forwards'
           },
           keyframes: {
             scan: {
               '0%': { top: '-20%' },
               '100%': { top: '120%' }
             }
+          },
+          keyframes: {
+            fadeLeft: {
+              '0%': { opacity: 0, transform: 'translateX(-80px)' },
+              '100%': { opacity: 1, transform: 'translateX(0)' }
+            },
+            fadeRight: {
+              '0%': { opacity: 0, transform: 'translateX(80px)' },
+              '100%': { opacity: 1, transform: 'translateX(0)' }
+            }
           }
-
         }
       }
     }
@@ -65,6 +76,26 @@ const fetchProjects = async (token = null) => {
   }
 };
 
+const fetchSkills = async () => {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/skills");
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+    return { skills: [], tech_stack: [], tools: [] };
+  }
+};
+
+const fetchAbout = async () => {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/about/");
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
 const loginAdmin = async (username, password) => {
   try {
     const res = await fetch("http://127.0.0.1:5000/auth/login", {
@@ -73,6 +104,7 @@ const loginAdmin = async (username, password) => {
       body: JSON.stringify({ username, password })
     });
     const data = await res.json();
+    console.log("Login response:", res.status, data);  // ← ADD THIS
     if (res.status === 200 && data.token) return data.token;
     return null;
   } catch (error) {
@@ -95,6 +127,10 @@ const ProjectCard = ({ name, description }) => (
   </div>
 );
 const TypingEffect = () => {
+  const [text, setText] = React.useState("");
+  const [roleIndex, setRoleIndex] = React.useState(0);
+  const [charIndex, setCharIndex] = React.useState(0);
+
   const roles = [
     "Cybersecurity Architect",
     "Cloud Infrastructure Engineer",
@@ -102,9 +138,6 @@ const TypingEffect = () => {
     "Embedded Systems Builder"
   ];
 
-  const [text, setText] = React.useState("");
-  const [roleIndex, setRoleIndex] = React.useState(0);
-  const [charIndex, setCharIndex] = React.useState(0);
 
   React.useEffect(() => {
     const currentRole = roles[roleIndex];
@@ -137,13 +170,139 @@ const Status = ({ label, value, color }) => (
   </div>
 );
 
+
+
+const AdminDashboard = ({ token, onLogout }) => {
+  console.log("Rendering AdminDashboard", token);
+  const [skillsData, setSkillsData] = React.useState({ skills: [], tech_stack: [], tools: [] });
+  const [newSkill, setNewSkill] = React.useState({ category: "", name: "" });
+  const [newTech, setNewTech] = React.useState("");
+  const [newTool, setNewTool] = React.useState("");
+
+  React.useEffect(() => {
+    fetch("http://127.0.0.1:5000/skills", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => setSkillsData(data));
+  }, [token]);
+
+  const addSkill = () => {
+    if(newSkill.category && newSkill.name) {
+      setSkillsData({
+        ...skillsData,
+        skills: [...skillsData.skills, { ...newSkill }]
+      });
+      setNewSkill({ category: "", name: "" });
+    }
+  };
+
+  const addTech = () => {
+    if(newTech) {
+      setSkillsData({ ...skillsData, tech_stack: [...skillsData.tech_stack, newTech] });
+      setNewTech("");
+    }
+  };
+
+  const addTool = () => {
+    if(newTool) {
+      setSkillsData({ ...skillsData, tools: [...skillsData.tools, newTool] });
+      setNewTool("");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-space text-gray-200 p-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold text-neonBlue">Admin Dashboard</h1>
+        <button onClick={onLogout} className="px-4 py-2 bg-red-600 rounded hover:shadow-neon transition">Logout</button>
+      </div>
+
+      {/* Skills */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold text-neonBlue mb-4">Skills</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+          {skillsData.skills.map((s, i) => (
+            <div key={i} className="p-2 rounded border border-neonBlue shadow-neon">
+              <p className="text-sm text-gray-400">{s.category}</p>
+              <p className="text-neonBlue font-bold">{s.name}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2 mb-6">
+          <input
+            placeholder="Category"
+            value={newSkill.category}
+            onChange={e => setNewSkill({...newSkill, category: e.target.value})}
+            className="p-2 rounded bg-black border border-neonBlue text-gray-200"
+          />
+          <input
+            placeholder="Skill Name"
+            value={newSkill.name}
+            onChange={e => setNewSkill({...newSkill, name: e.target.value})}
+            className="p-2 rounded bg-black border border-neonBlue text-gray-200 flex-1"
+          />
+          <button onClick={addSkill} className="px-4 py-2 bg-neonBlue text-black rounded hover:shadow-neon transition">Add</button>
+        </div>
+      </section>
+
+      {/* Tech Stack */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold text-neonBlue mb-4">Tech Stack</h2>
+        <div className="flex flex-wrap gap-4 mb-4">
+          {skillsData.tech_stack.map((t, i) => (
+            <span key={i} className="px-4 py-2 border border-neonBlue rounded-full shadow-neon text-neonBlue">{t}</span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            placeholder="Add Tech"
+            value={newTech}
+            onChange={e => setNewTech(e.target.value)}
+            className="p-2 rounded bg-black border border-neonBlue text-gray-200 flex-1"
+          />
+          <button onClick={addTech} className="px-4 py-2 bg-neonBlue text-black rounded hover:shadow-neon transition">Add</button>
+        </div>
+      </section>
+
+      {/* Tools */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold text-neonBlue mb-4">Tools</h2>
+        <div className="flex flex-wrap gap-4 mb-4">
+          {skillsData.tools.map((t, i) => (
+            <span key={i} className="px-4 py-2 border border-neonBlue rounded-full shadow-neon text-neonBlue">{t}</span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            placeholder="Add Tool"
+            value={newTool}
+            onChange={e => setNewTool(e.target.value)}
+            className="p-2 rounded bg-black border border-neonBlue text-gray-200 flex-1"
+          />
+          <button onClick={addTool} className="px-4 py-2 bg-neonBlue text-black rounded hover:shadow-neon transition">Add</button>
+        </div>
+      </section>
+    </div>
+  );
+};
+
 // ================= MAIN APP =================
 const App = () => {
   const [projects, setProjects] = useState([]);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token"));
   const [showLogin, setShowLogin] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [loginError, setLoginError] = useState("");
+  const [page, setPage] = useState("home"); // new state
+  
+  const [skillsData, setSkillsData] = useState({
+    skills: [],
+    tech_stack: [],
+    tools: []
+  });
+  
+  const [aboutData, setAboutData] = useState(null);
 
   useEffect(() => {
     fetchProjects(token).then(data => setProjects(data));
@@ -156,189 +315,331 @@ const App = () => {
       setToken(t);
       setShowLogin(false);
       setLoginError("");
+      setPage("dashboard"); // ← redirect to dashboard
     } else {
       setLoginError("Invalid credentials");
     }
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    setPage("home");
   };
 
   const scrollToSection = (id) => {
     document.getElementById(id).scrollIntoView({ behavior: "smooth" });
   };
 
+  
+  
+
+  useEffect(() => {
+    fetchSkills().then(data => setSkillsData(data));
+  }, []);
+
+
+  useEffect(() => {
+    fetchAbout().then(data => setAboutData(data));
+  }, []);
+
   return (
+
     <div>
+      {page === "dashboard" && token ? (
+        <AdminDashboard token={token} onLogout={handleLogout} />
+      ) : (
 
-      {/* NAVBAR */}
-      <nav className="fixed w-full bg-black/40 backdrop-blur-md border-b border-neonBlue/20 z-50">
-        <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
-          <div className="font-bold text-neonBlue tracking-widest">ZO.EXE</div>
-          <div className="space-x-6 hidden md:block">
-            {["home","about","skills","expertise","projects"].map(item => (
-              <button key={item}
-                onClick={() => scrollToSection(item)}
-                className="hover:text-neonBlue transition">
-                {item.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+          <div>
 
-      {/* SECRET ADMIN BUTTON */}
-      <button onClick={() => setShowLogin(true)}
-        className="fixed bottom-4 right-4 text-xs text-gray-600 hover:text-neonBlue">
-        ●
-      </button>
+            {/* NAVBAR */}
+            <nav className="fixed w-full bg-black/40 backdrop-blur-md border-b border-neonBlue/20 z-50">
+              <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
+                <div className="font-bold text-neonBlue tracking-widest">PORTFOLIO ZO</div>
+                <div className="space-x-6 hidden md:block">
+                  {["home","about","skills","tech","tools","projects"].map(item => (
+                    <button key={item}
+                      onClick={() => scrollToSection(item)}
+                      className="hover:text-neonBlue transition">
+                      {item.toUpperCase()}
+                    </button>
+                  ))}
+                  {token && (
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem("token");
+                        setToken(null);
+                      }}
+                      className="ml-6 text-red-400 hover:text-red-300 transition"
+                    >
+                      LOGOUT
+                    </button>
+                  )}
 
-      {/* LOGIN MODAL */}
-      {showLogin && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <form onSubmit={handleLogin}
-            className="bg-cardDark border border-neonBlue/40 p-8 rounded-lg shadow-neon w-96">
-            <h2 className="text-xl font-bold text-neonBlue mb-4 text-center">
-              Admin Access
-            </h2>
-            {loginError && <p className="text-red-500 mb-4">{loginError}</p>}
-            <input
-              type="text"
-              placeholder="Username"
-              className="w-full p-2 mb-4 bg-black border border-neonBlue/40 rounded"
-              value={loginForm.username}
-              onChange={e => setLoginForm({...loginForm, username:e.target.value})}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full p-2 mb-4 bg-black border border-neonBlue/40 rounded"
-              value={loginForm.password}
-              onChange={e => setLoginForm({...loginForm, password:e.target.value})}
-              required
-            />
-            <button className="w-full py-2 bg-neonBlue text-black font-bold rounded hover:shadow-neon transition">
-              LOGIN
+                </div>
+              </div>
+            </nav>
+
+            {/* SECRET ADMIN BUTTON */}
+          
+            <button
+              onClick={() => setShowLogin(true)}
+              className="fixed bottom-16 right-6 z-50 text-xs text-gray-600 hover:text-neonBlue">
+              ●
             </button>
-          </form>
-        </div>
-      )}
 
-      <div className="pt-28">
 
-        {/* HERO */}
-        <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-
-          {/* Animated Grid Background */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] animate-pulse"></div>
-
-          <div className="relative z-10 max-w-7xl mx-auto px-8 grid md:grid-cols-2 gap-16 items-center">
-
-            {/* LEFT SIDE */}
-            <div>
-              <h1 className="text-5xl md:text-6xl font-extrabold text-neonBlue drop-shadow-lg">
-                Nomenjanahary Zo DIMBINDRAINY
-              </h1>
-
-              <div className="mt-6 text-xl font-mono text-green-400">
-                &gt; <TypingEffect />
+            {/* LOGIN MODAL */}
+            {showLogin && (
+              <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+                <form onSubmit={handleLogin}
+                  className="bg-cardDark border border-neonBlue/40 p-8 rounded-lg shadow-neon w-96">
+                  <h2 className="text-xl font-bold text-neonBlue mb-4 text-center">
+                    Admin Access
+                  </h2>
+                  {loginError && <p className="text-red-500 mb-4">{loginError}</p>}
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    className="w-full p-2 mb-4 bg-black border border-neonBlue/40 rounded"
+                    value={loginForm.username}
+                    onChange={e => setLoginForm({...loginForm, username:e.target.value})}
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    className="w-full p-2 mb-4 bg-black border border-neonBlue/40 rounded"
+                    value={loginForm.password}
+                    onChange={e => setLoginForm({...loginForm, password:e.target.value})}
+                    required
+                  />
+                  <button className="w-full py-2 bg-neonBlue text-black font-bold rounded hover:shadow-neon transition">
+                    LOGIN
+                  </button>
+                </form>
               </div>
+            )}
 
-              <div className="mt-8 flex gap-4">
-                <button
-                  onClick={() => document.getElementById("projects").scrollIntoView({behavior:"smooth"})}
-                  className="px-6 py-3 bg-neonBlue text-black font-bold rounded hover:shadow-neon transition">
-                  View Projects
-                </button>
+            <div className="pt-28">
 
-                <button className="px-6 py-3 border border-neonBlue text-neonBlue rounded hover:shadow-neonSoft transition">
-                  Download CV
-                </button>
-              </div>
+              {/* HERO */}
+              <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
 
-              {/* Stats */}
-              <div className="mt-14 grid grid-cols-2 gap-6">
-                <Stat number="10+" label="Secure Deployments" />
-                <Stat number="5+" label="Cloud Architectures" />
-                <Stat number="15+" label="Automation Scripts" />
-                <Stat number="3+" label="Embedded Systems" />
-              </div>
-            </div>
+                {/* Animated Grid Background */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] animate-pulse"></div>
 
-            {/* RIGHT SIDE - SOC PANEL */}
-            {/* HOLOGRAM PROFILE */}
-            <div className="flex flex-col items-center mb-8 relative">
+                <div className="relative z-10 max-w-7xl mx-auto px-8 grid md:grid-cols-2 gap-16 items-center">
 
-              <div className="relative w-32 h-32">
+                  {/* LEFT SIDE */}
+                  <div>
+                    <h1 className="text-5xl md:text-6xl font-extrabold text-neonBlue drop-shadow-lg">
+                      Nomenjanahary Zo DIMBINDRAINY
+                    </h1>
 
-                {/* Rotating outer ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-neonBlue animate-spin-slow opacity-60"></div>
+                    <div className="mt-6 text-xl font-mono text-green-400">
+                      &gt; <TypingEffect />
+                    </div>
 
-                {/* Glow ring */}
-                <div className="absolute inset-2 rounded-full border border-neonBlue shadow-neon"></div>
+                    <div className="mt-8 flex gap-4">
+                      <button
+                        onClick={() => document.getElementById("projects").scrollIntoView({behavior:"smooth"})}
+                        className="px-6 py-3 bg-neonBlue text-black font-bold rounded hover:shadow-neon transition">
+                        View Projects
+                      </button>
 
-                {/* Scanning line */}
-                <div className="absolute inset-0 rounded-full overflow-hidden">
-                  <div className="absolute w-full h-6 bg-gradient-to-b from-transparent via-neonBlue/40 to-transparent animate-scan"></div>
+                      <button className="px-6 py-3 border border-neonBlue text-neonBlue rounded hover:shadow-neonSoft transition">
+                        Download CV
+                      </button>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="mt-14 grid grid-cols-2 gap-6">
+                      <Stat number="10+" label="Secure Deployments" />
+                      <Stat number="5+" label="Cloud Architectures" />
+                      <Stat number="15+" label="Automation Scripts" />
+                      <Stat number="3+" label="Embedded Systems" />
+                    </div>
+                  </div>
+
+                  {/* RIGHT SIDE - SOC PANEL */}
+                  {/* HOLOGRAM PROFILE */}
+                  <div className="flex flex-col items-center mb-8 relative">
+
+                    <div className="relative w-48 h-48">
+
+                      {/* Rotating outer ring */}
+                      <div className="absolute inset-0 rounded-full border-4 border-neonBlue animate-spin-slow opacity-60"></div>
+
+                      {/* Glow ring */}
+                      <div className="absolute inset-2 rounded-full border-2 border-neonBlue shadow-neon"></div>
+
+                      {/* Scanning line */}
+                      <div className="absolute inset-0 rounded-full overflow-hidden">
+                        <div className="absolute w-full h-8 bg-gradient-to-b from-transparent via-neonBlue/40 to-transparent animate-scan"></div>
+                      </div>
+
+                      {/* Profile Image */}
+                      <img
+                        src="assets/Profilee.png"
+                        className="w-48 h-48 rounded-full object-cover border-4 border-neonBlue shadow-neon relative z-10"
+                      />
+                    </div>
+
+                    <p className="mt-4 text-2xl text-neonBlue font-bold tracking-widest">
+                      OPERATOR: ZO
+                    </p>
+                    <p className="text-sm text-green-400">IDENTITY VERIFIED</p>
+
+                  </div>
+
+
+                </div>
+              </section>
+
+
+              {/* ABOUT */}
+              {aboutData && (
+              <section id="about" className="py-28 text-center max-w-5xl mx-auto px-8">
+
+                <h2 className="text-3xl font-bold text-neonBlue mb-10">
+                  About Me
+                </h2>
+
+                <h3 className="text-xl text-green-400 mb-8">
+                  {aboutData.headline}
+                </h3>
+
+                <div className="space-y-6 text-gray-300 leading-relaxed text-lg">
+                  {aboutData.paragraphs.map((p, i) => (
+                    <p key={i}>{p}</p>
+                  ))}
                 </div>
 
-                {/* Profile Image */}
-                <img
-                  src="assets/profile.jpg"
-                  className="w-32 h-32 rounded-full object-cover border-2 border-neonBlue shadow-neon relative z-10"
-                />
+                {/* Roles */}
+                <div className="flex justify-center mt-10 text-xl font-mono text-green-400">
+                  &gt; <TypingEffect roles={aboutData.roles} />
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16">
+                  {aboutData.stats.map((stat, i) => (
+                    <Stat key={i} number={stat.number} label={stat.label} />
+                  ))}
+                </div>
+
+              </section>
+              )}
+
+
+              {/* SKILLS */}
+              {/* CORE SKILLS */}
+              <section id="skills" className="py-24">
+                <h2 className="text-3xl font-bold text-center text-neonBlue mb-16">
+                  Core Skills
+                </h2>
+
+                <div className="max-w-6xl mx-auto px-8 grid md:grid-cols-2 gap-8">
+                  {skillsData.skills.map((skill, i) => (
+                    <div
+                      key={i}
+                      className="bg-cardDark border border-neonBlue/30 p-6 rounded-lg shadow-neonSoft hover:shadow-neon transition duration-300"
+                    >
+                      <p className="text-neonBlue font-semibold text-lg">
+                        {skill.name}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {skill.category}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* TECH STACK */}
+              <section id="tech" className="py-24 bg-black/20">
+                <h2 className="text-3xl font-bold text-center text-neonBlue mb-16">
+                  Tech Stack
+                </h2>
+
+                <div className="max-w-5xl mx-auto px-8 flex flex-wrap justify-center gap-6">
+                  {skillsData.tech_stack.map((tech, i) => (
+                    <span
+                      key={i}
+                      className="px-6 py-3 border border-neonBlue rounded-full text-neonBlue hover:shadow-neon transition duration-300"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              {/* TOOLS */}
+              <section id="tools" className="py-24">
+                <h2 className="text-3xl font-bold text-center text-neonBlue mb-16">
+                  Tools & Platforms
+                </h2>
+
+                <div className="max-w-5xl mx-auto px-8 flex flex-wrap justify-center gap-6">
+                  {skillsData.tools.map((tool, i) => (
+                    <span
+                      key={i}
+                      className="px-6 py-3 border border-green-400 rounded-full text-green-400 hover:shadow-lg transition duration-300"
+                    >
+                      {tool}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              {/* Tailwind keyframes for floating skill badges */}
+              <style>
+              {`
+              @keyframes floatSkill {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-8px); }
+              }
+              @keyframes fadeIn {
+                0% { opacity: 0; transform: translateY(10px); }
+                100% { opacity: 1; transform: translateY(0); }
+              }
+              `}
+              </style>
+              
+              {/* PROJECTS */}
+              <section id="projects" className="py-20 max-w-6xl mx-auto px-8">
+                <h2 className="text-3xl font-bold text-center text-neonBlue mb-10">
+                  Projects
+                </h2>
+                {projects.length === 0 ? (
+                  <p className="text-center text-gray-400">No projects loaded</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {projects.map((p, i) => <ProjectCard key={i} {...p} />)}
+                  </div>
+                )}
+              </section>
+
+            </div>
+            {/* ==================== FIXED FOOTER ==================== */}
+            <footer className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-md border-t border-neonBlue/30 z-50">
+              <div className="max-w-6xl mx-auto px-8 py-4 flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
+                
+                <p>&copy; 2026 Nomenjanahary Zo DIMBINDRAINY. All rights reserved.</p>
+                
+                <div className="flex space-x-4 mt-2 md:mt-0">
+                  <a href="https://github.com/Dimbindrainy" target="_blank" className="hover:text-neonBlue transition">GitHub</a>
+                  <a href="https://linkedin.com/in/nomenjanahary-zo-dimbindrainy-aba40b21b" target="_blank" className="hover:text-neonBlue transition">LinkedIn</a>
+                  <a href="mailto:nomenjanahary.zo@outlook.com" className="hover:text-neonBlue transition">Email</a>
+                </div>
+
               </div>
-
-              <p className="mt-4 text-neonBlue font-bold tracking-widest">
-                OPERATOR: ZO
-              </p>
-              <p className="text-xs text-green-400">IDENTITY VERIFIED</p>
-
-            </div>
+            </footer>
 
           </div>
-        </section>
+        )};
+</div>  
+)};
 
-
-        {/* ABOUT */}
-        <section id="about" className="py-20 text-center max-w-4xl mx-auto px-8">
-          <h2 className="text-3xl font-bold text-neonBlue mb-6">About Me</h2>
-          <p className="text-gray-300 leading-relaxed">
-            I design secure architectures, deploy cloud systems,
-            build web applications, and develop embedded IoT solutions.
-            My focus is resilience, performance, and innovation.
-          </p>
-        </section>
-
-        {/* SKILLS */}
-        <section id="skills" className="py-20 text-center">
-          <h2 className="text-3xl font-bold text-neonBlue mb-8">Skills</h2>
-          <div className="flex flex-wrap justify-center gap-4">
-            <SkillBadge text="Cybersecurity" />
-            <SkillBadge text="Cloud (AWS / Azure)" />
-            <SkillBadge text="Flask / Django" />
-            <SkillBadge text="React / Tailwind" />
-            <SkillBadge text="Embedded Systems (ESP32)" />
-            <SkillBadge text="Python Automation" />
-          </div>
-        </section>
-
-        {/* PROJECTS */}
-        <section id="projects" className="py-20 max-w-6xl mx-auto px-8">
-          <h2 className="text-3xl font-bold text-center text-neonBlue mb-10">
-            Projects
-          </h2>
-          {projects.length === 0 ? (
-            <p className="text-center text-gray-400">No projects loaded</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map((p, i) => <ProjectCard key={i} {...p} />)}
-            </div>
-          )}
-        </section>
-
-      </div>
-    </div>
-  );
-};
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
